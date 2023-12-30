@@ -5,7 +5,10 @@ import "./popup.css";
 import "@fontsource/roboto";
 
 import { InputBase, Paper, IconButton } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
+import {
+  Add as AddIcon,
+  PictureInPictureAltOutlined,
+} from "@mui/icons-material";
 
 import {
   LocalStorageOptions,
@@ -14,6 +17,7 @@ import {
   setStoredCities,
   setStoredOptions,
 } from "../utils/storage";
+import { Messages } from "../utils/messages";
 
 const App: React.FC<{}> = () => {
   const [cities, setCities] = React.useState<string[]>([]);
@@ -39,6 +43,19 @@ const App: React.FC<{}> = () => {
     setStoredCities([...c]);
   };
 
+  const overlayButtonClicked = () => {
+    chrome.tabs.query(
+      {
+        active: true,
+        currentWindow: true,
+      },
+      (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          message: Messages.TOGGLE_OVERLAY,
+        });
+      }
+    );
+  };
   React.useEffect(() => {
     getStoredCities().then((cities) => setCities(cities));
     getStoredOptions().then((options) => setOptions(options));
@@ -54,6 +71,12 @@ const App: React.FC<{}> = () => {
       tempscale: options.tempscale === "imperial" ? "metric" : "imperial",
     };
     setStoredOptions(newOptions).then(() => setOptions(newOptions));
+
+    // update badge
+    chrome.runtime.sendMessage({
+      message: "updateBadge",
+      tempscale: newOptions.tempscale,
+    });
   };
 
   return (
@@ -85,6 +108,14 @@ const App: React.FC<{}> = () => {
           ) : (
             <span>&#8451;</span>
           )}
+        </IconButton>
+
+        <IconButton
+          onClick={overlayButtonClicked}
+          sx={{ p: "10px" }}
+          aria-label="settings"
+        >
+          <PictureInPictureAltOutlined></PictureInPictureAltOutlined>
         </IconButton>
       </Paper>
 

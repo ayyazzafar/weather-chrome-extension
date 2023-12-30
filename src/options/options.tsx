@@ -51,6 +51,9 @@ const App: React.FC<{}> = () => {
         setFormState("ready");
       }, 1000);
     });
+
+    // send signal to background with name updateBadge
+    chrome.runtime.sendMessage({ type: "updateBadge" });
   };
 
   return (
